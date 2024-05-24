@@ -25,7 +25,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         dataToSheet();
     }
     if (message.action === 'confirmDuplicate') {
-        const confirmOverride = confirm(`Name "${message.name}" already exists in the sheet. Do you want to override and insert a duplicate?`);
+        const confirmOverride = confirm(`Profile already exists in the sheet. Do you want to override and insert a duplicate?`);
         sendResponse({ confirm: confirmOverride });
     }
 });

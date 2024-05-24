@@ -64,7 +64,7 @@ async function insertData(spreadsheetId, sheetName, data) {
         console.log("res: ", res);
 
         // Check if the name already exists
-        const nameExists = res.values.some(row => row[0] === data[0][0]);
+        const nameExists = res.values.some(row => row[13] === data[0][13]);
         console.log("nameExists: ", nameExists);
         if (nameExists) {
             // Send message to the content script or popup to ask for confirmation
@@ -74,7 +74,7 @@ async function insertData(spreadsheetId, sheetName, data) {
                         // Continue with the insertion
                         await continueInsert();
                     } else {
-                        console.error(`Name "${data[0][0]}" insertion canceled by user.`);
+                        console.error(`Profile insertion canceled by user.`);
                     }
                 });
             });
