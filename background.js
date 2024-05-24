@@ -46,7 +46,7 @@ async function insertData(spreadsheetId, sheetName, data) {
             throw new Error('Failed to obtain OAuth token');
         }
         
-        // Getting sheet details to know row num to insert at
+        // Getting sheet details to know duplicates and row num to insert at
         const response = await fetch(
             `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}`,
             {
@@ -100,12 +100,10 @@ async function insertData(spreadsheetId, sheetName, data) {
                     body: JSON.stringify({ values: data }),
                 }
             );
-
             if (!updateResponse.ok) {
                 const errorText = await updateResponse.text();
                 throw new Error(`Failed to update sheet data: ${updateResponse.status} - ${updateResponse.statusText} - ${errorText}`);
             }
-
             const result = await updateResponse.json();
             console.log("Update result: ", result);
 
@@ -117,15 +115,12 @@ async function insertData(spreadsheetId, sheetName, data) {
                     headers: { Authorization: `Bearer ${token}` },
                 }
             );
-
             if (!cfResponse.ok) {
                 const errorText = await cfResponse.text();
                 throw new Error(`Failed to fetch conditional formatting: ${cfResponse.status} - ${cfResponse.statusText} - ${errorText}`);
             }
-
             const cfResult = await cfResponse.json();
             console.log("Conditional formatting result: ", cfResult);
-
             const conditionalFormats = cfResult.sheets.find(s => s.properties.title === sheetName).conditionalFormats || [];
             console.log("conditionalFormats: ", conditionalFormats);
 
@@ -137,12 +132,10 @@ async function insertData(spreadsheetId, sheetName, data) {
                     headers: { Authorization: `Bearer ${token}` },
                 }
             );
-
             if (!sheetPropertiesResponse.ok) {
                 const errorText = await sheetPropertiesResponse.text();
                 throw new Error(`Failed to fetch sheet properties: ${sheetPropertiesResponse.status} - ${sheetPropertiesResponse.statusText} - ${errorText}`);
             }
-
             const sheetPropertiesResult = await sheetPropertiesResponse.json();
             const sheet = sheetPropertiesResult.sheets.find(s => s.properties.title === sheetName);
             if (!sheet) {
@@ -170,15 +163,12 @@ async function insertData(spreadsheetId, sheetName, data) {
                     }),
                 }
             );
-
             if (!clearFilterResponse.ok) {
                 const errorText = await clearFilterResponse.text();
                 throw new Error(`Failed to clear basic filter: ${clearFilterResponse.status} - ${clearFilterResponse.statusText} - ${errorText}`);
             }
-
             const clearFilterResult = await clearFilterResponse.json();
             console.log("Clear filter result: ", clearFilterResult);
-
             // Re-enable the basic filter to cover the entire range
             const enableFilterResponse = await fetch(
                 `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`,
@@ -213,12 +203,10 @@ async function insertData(spreadsheetId, sheetName, data) {
                     }),
                 }
             );
-
             if (!enableFilterResponse.ok) {
                 const errorText = await enableFilterResponse.text();
                 throw new Error(`Failed to enable basic filter: ${enableFilterResponse.status} - ${enableFilterResponse.statusText} - ${errorText}`);
             }
-
             const enableFilterResult = await enableFilterResponse.json();
             console.log("Enable filter result: ", enableFilterResult);
 

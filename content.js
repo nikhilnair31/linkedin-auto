@@ -3,6 +3,7 @@
 // LinkedIn Profile vars
 let profileText = "-";
 let currDate = "-";
+let formattedName = "-";
 let fullName = "-";
 let firstName = "-";
 let school = "-";
@@ -78,13 +79,14 @@ function getProfileData() {
     }
     
     // Extract profile details
+    profileUrl = window.location.href;
     profileText = document.querySelector(".mt2.relative").innerText;
     currDate = formatDate(new Date());
     fullName = document.querySelector(".text-heading-xlarge.inline.t-24.v-align-middle.break-words").innerText;
+    formattedName = `=HYPERLINK("${profileUrl}", "${fullName}")`;
     firstName = getFirstWord(fullName);
     school = document.querySelector(".pv-text-details__right-panel-item-text").innerText.trim();
     company = document.querySelector(".QXKGsjdyqdqwHmLQHekyaekuIfvbFzrvlkJI .rapjPUgpodXzhasLarIJxQRvagGOVLaRjEfkM").innerText.trim();
-    profileUrl = window.location.href;
     type = selectType(profileText);
     template = selectMessageTemplate(type);
     message = customizeTemplate(template, firstName, company);
@@ -93,6 +95,7 @@ function getProfileData() {
     console.log(`profileText: ${profileText}`);
     console.log(`currDate: ${currDate}`);
     console.log(`fullName: ${fullName}`);
+    console.log(`formattedName: ${formattedName}`);
     console.log(`firstName: ${firstName}`);
     console.log(`school: ${school}`);
     console.log(`company: ${company}`);
@@ -208,7 +211,7 @@ function dataToSheet() {
     getProfileData();
     
     const data = [[
-        fullName,
+        formattedName,
         'Y',
         currDate,
         'N',
