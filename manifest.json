@@ -40,7 +40,7 @@
     "commands": {
         "start-automation-cmd": {
             "suggested_key": {
-                "default": "Ctrl+Shift+1"
+                "default": "Ctrl+Shift+L"
             },
             "description": "Start LinkedIn Automation"
         },

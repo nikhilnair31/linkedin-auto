@@ -1,19 +1,5 @@
 // content.js
 
-// LinkedIn Profile vars
-let profileText = "-";
-let currDate = "-";
-let formattedName = "-";
-let fullName = "-";
-let firstName = "-";
-let school = "-";
-let company = "-";
-let email = "-";
-let profileUrl = "-";
-let type = "-";
-let template = "-";
-let message = "-";
-
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log("chrome.runtime.onMessage.addListener");
     console.log(`message.action: ${message.action}`);
@@ -23,6 +9,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
     if (message.action === "insertData") {
         dataToSheet();
+    }
+    if (message.action === "interactApollo") {
+        fetchApolloEmail();
     }
     if (message.action === 'confirmDuplicate') {
         const confirmOverride = confirm(`Profile already exists in the sheet. Do you want to override and insert a duplicate?`);
@@ -79,17 +68,19 @@ function getProfileData() {
     }
     
     // Extract profile details
-    profileUrl = window.location.href;
-    profileText = document.querySelector(".mt2.relative").innerText;
-    currDate = formatDate(new Date());
-    fullName = document.querySelector(".text-heading-xlarge.inline.t-24.v-align-middle.break-words").innerText;
-    formattedName = `=HYPERLINK("${profileUrl}", "${fullName}")`;
-    firstName = getFirstWord(fullName);
-    school = document.querySelector(".pv-text-details__right-panel-item-text").innerText.trim();
-    company = document.querySelector(".QXKGsjdyqdqwHmLQHekyaekuIfvbFzrvlkJI .rapjPUgpodXzhasLarIJxQRvagGOVLaRjEfkM").innerText.trim();
-    type = selectType(profileText);
-    template = selectMessageTemplate(type);
-    message = customizeTemplate(template, firstName, company);
+    let profileUrl = window.location.href;
+    let profileText = document.querySelector(".mt2.relative").innerText;
+    let currDate = formatDate(new Date());
+    let fullName = document.querySelector(".text-heading-xlarge.inline.t-24.v-align-middle.break-words").innerText;
+    let formattedName = `=HYPERLINK("${profileUrl}", "${fullName}")`;
+    let firstName = getFirstWord(fullName);
+    let school = document.querySelector(".pv-text-details__right-panel-item-text").innerText.trim();
+    // FIXME: This breaks when profile has no company in the header area. Check same for no school also.
+    let company = document.querySelector(".QXKGsjdyqdqwHmLQHekyaekuIfvbFzrvlkJI .rapjPUgpodXzhasLarIJxQRvagGOVLaRjEfkM").innerText.trim();
+    let email = fetchApolloEmail();
+    let type = selectType(profileText);
+    let template = selectMessageTemplate(type);
+    let message = customizeTemplate(template, firstName, company);
     
     // Log the message to the console
     console.log(`profileText: ${profileText}`);
@@ -99,16 +90,39 @@ function getProfileData() {
     console.log(`firstName: ${firstName}`);
     console.log(`school: ${school}`);
     console.log(`company: ${company}`);
+    console.log(`email: ${email}`);
     console.log(`profileUrl: ${profileUrl}`);
     console.log(`template: ${template}`);
     console.log(`message: ${message}`);
+    
+    const data = [[
+        formattedName,
+        'Y',
+        currDate,
+        'N',
+        'N',
+        0,
+        'N',
+        '-',
+        company,
+        email,
+        '-',
+        '-',
+        type === "Recruiter" ? "Y" : "N",
+        message,
+    ]];
+    console.log("data: ", data);
+    
+    return data
 }
 
 function automateLinkedIn() {
     console.log("automateLinkedIn");
     
     // Populating Profile related vars
-    getProfileData();
+    const data = getProfileData();
+    fullName = data[0][0];
+    message = data[0][13];
     
     // Function to click the connect button
     function clickConnectButton(profileName) {
@@ -171,116 +185,82 @@ function automateLinkedIn() {
         }
     }, 1000);
     
-    // Function to handle send button click
-    // TODO: Update to do: clickApolloExtension -> insertData -> closeTab
-    function onSendButtonClick() {
-        console.log('Connection request sent successfully!');
-    }
     // Attach event listener to the send button
     let sendButton = document.querySelector("button[aria-label='Send now']");
     if (sendButton) {
-        sendButton.addEventListener('click', onSendButtonClick);
+        sendButton.addEventListener('click', dataToSheet);
     }
-    
-    // function extractEmail() {
-    //     // Assuming the email is revealed by an extension, adjust the selector as needed
-    //     let emailElement = document.querySelector(".email-class"); // Adjust the selector
-    //     return emailElement ? emailElement.innerText : "N/A";
-    // }
-    
-    // // Save profile details and email (if accessible)
-    // chrome.runtime.sendMessage({
-    //     action: "saveProfile",
-    //     data: {
-    //         name: name,
-    //         profileUrl: profileUrl,
-    //         company: company,
-    //         email: extractEmail() // Function to extract email if available
-    //     }
-    // });
-    
-    // // Close tab after a delay
-    // setTimeout(() => {
-    //     chrome.runtime.sendMessage({ action: "closeTab" });
-    // }, 3000);
 }
 function dataToSheet() {
     console.log("dataToSheet");
-
-    // Populating Profile related vars
-    getProfileData();
     
-    const data = [[
-        formattedName,
-        'Y',
-        currDate,
-        'N',
-        'N',
-        0,
-        'N',
-        '-',
-        company,
-        email,
-        '-',
-        '-',
-        type === "Recruiter" ? "Y" : "N",
-        message,
-    ]];
-    console.log("data: ", data);
-
+    // Get sheetId and name and send message to insert data
     chrome.storage.local.get(['saved_spreadsheetId', 'saved_sheetName'], function(result) {
         chrome.runtime.sendMessage(
             {
                 action: 'insertData',
                 spreadsheetId: result.saved_spreadsheetId,
                 sheetName: result.saved_sheetName,
-                data: data
+                data: getProfileData()
             },
             (response) => {
                 console.log("insertDataToSheet: Received response from background script", response);
-    
+                
                 if (response.status === 'success') {
                     console.log('Data inserted:', response.response);
-                } else {
+                } 
+                else {
                     console.error('Error inserting data:', response.error);
                 }
             }
         );
     });
-}
-// FIXME: Look into how to open this and pull email id programatically
-function clickApolloExtension() {
-    console.log('clickApolloExtension');
     
+    // Close tab after a delay
+    console.log("Closing tab!");
+    setTimeout(() => {
+        chrome.runtime.sendMessage({ action: "closeTab" });
+    }, 1000);
+}
+
+async function fetchApolloEmail() {
     try {
-        let uiElement;
-        if (document.querySelector('[data-cy="apollo-opener-icon-new"]')) {
-            uiElement = document.querySelector('[data-cy="apollo-opener-icon-new"]');
-        } 
-        else if (document.querySelector('.x_NvH4v .x_ReKZf')) {
-            uiElement = document.querySelector('.x_NvH4v .x_ReKZf');
-        }
-        else if (document.querySelector('.zp-button x_zUY3r x_jSaSY x_rhXT_ zp-overlay-settings-icon x_Zk0Yf')) {
-            uiElement = document.querySelector('.zp-button x_zUY3r x_jSaSY x_rhXT_ zp-overlay-settings-icon x_Zk0Yf');
-        }
-        else if (document.querySelector('.zp-button.x_zUY3r.x_jSaSY.x_rhXT_.zp-overlay-settings-icon.x_Zk0Yf')) {
-            uiElement = document.querySelector('.zp-button.x_zUY3r.x_jSaSY.x_rhXT_.zp-overlay-settings-icon.x_Zk0Yf');
-        }
-        else if (document.querySelector("div[data-cy='prospect-tab-save-contact-button']")) {
-            uiElement = document.querySelector("div[data-cy='prospect-tab-save-contact-button']");
-        }
-        console.log(`uiElement: ${uiElement}`);
+        const { saved_apolloApiKey: apiKey } = await chrome.storage.local.get('saved_apolloApiKey');
         
-        // Click the element if found
-        if (uiElement) {
-            uiElement.click();
-            console.log('Clicked the other extension UI element.');
-        } 
-        else {
-            console.error('UI element not found.');
+        if (!apiKey) {
+            console.error("API key not found in storage.");
+            return;
         }
-    } 
-    catch (error) {
-        console.log(`clickApolloExtension: ${error}`);
+        
+        const apiUrl = "https://api.apollo.io/v1/people/match";
+        const requestData = {
+            linkedin_url: window.location.href
+        };
+        
+        const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Cache-Control": "no-cache",
+                "X-Api-Key": apiKey
+            },
+            body: JSON.stringify(requestData)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.person && data.person.email) {
+            const email = data.person.email;
+            console.log("Email: ", email);
+            return email;
+        } else {
+            console.log("Email not found in response.");
+        }
+    } catch (error) {
+        console.error("Error fetching email:", error);
     }
 }

@@ -17,7 +17,7 @@ label {
     display: block;
 }
 
-input[type="text"] {
+input {
     display: block;
     width: 100%; /* Adjusted to match button width */
     padding: 10px;
