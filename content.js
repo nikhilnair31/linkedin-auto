@@ -23,6 +23,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "insertData") {
         dataToSheet();
     }
+    if (message.action === 'confirmDuplicate') {
+        const confirmOverride = confirm(`Name "${message.name}" already exists in the sheet. Do you want to override and insert a duplicate?`);
+        sendResponse({ confirm: confirmOverride });
+    }
 });
 
 // Function to pull profile data
@@ -165,6 +169,7 @@ function automateLinkedIn() {
     }, 1000);
     
     // Function to handle send button click
+    // TODO: Update to do: clickApolloExtension -> insertData -> closeTab
     function onSendButtonClick() {
         console.log('Connection request sent successfully!');
     }
@@ -240,6 +245,7 @@ function dataToSheet() {
         );
     });
 }
+// FIXME: Look into how to open this and pull email id programatically
 function clickApolloExtension() {
     console.log('clickApolloExtension');
     
