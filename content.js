@@ -76,7 +76,7 @@ function getProfileData() {
     
     // Check for the company element
     let companyElement = document.querySelector(".QXKGsjdyqdqwHmLQHekyaekuIfvbFzrvlkJI .rapjPUgpodXzhasLarIJxQRvagGOVLaRjEfkM");
-    let company = companyElement ? getFirstWord(companyElement.innerText.trim()) : "-";
+    let company = companyElement ? companyElement.innerText.trim() : "-";
     
     // Check for the school element
     let schoolElement = document.querySelector(".QXKGsjdyqdqwHmLQHekyaekuIfvbFzrvlkJI .pv-text-details__right-panel-item-text");
@@ -87,8 +87,17 @@ function getProfileData() {
     let isRecruiter = (type === "Recruiter") ? "Y" : "N";
     let email = (type === "Recruiter") ? fetchApolloEmail() : "-";
     
-    let template = selectMessageTemplate(type);
-    let message = customizeTemplate(template, firstName, company);
+    // Update the message variable to contain the updated message
+    let template = "-";
+    let message = "-";
+    let noteTextarea = document.querySelector("textarea[name='message']");
+    if (noteTextarea && noteTextarea.value.trim() !== "") {
+        message = noteTextarea.value;
+    } 
+    else {
+        template = selectMessageTemplate(type);
+        message = customizeTemplate(template, firstName, company);
+    }
     
     // Log the message to the console
     console.log(`currDate: ${currDate}`);
@@ -217,14 +226,6 @@ function automateLinkedIn() {
 function dataToSheet() {
     console.log("dataToSheet");
     
-    // Update the mesage var to contain the updated message
-    let noteTextarea = document.querySelector("textarea[name='message']");
-    if (noteTextarea) {
-        console.log("noteTextarea.value: ", noteTextarea.value);
-        console.log("message: ", message);
-        message = noteTextarea.value;
-    }
-    
     // Get sheetId and name and send message to insert data
     chrome.storage.local.get(['saved_spreadsheetId', 'saved_sheetName'], function(result) {
         chrome.runtime.sendMessage(
@@ -246,12 +247,6 @@ function dataToSheet() {
             }
         );
     });
-    
-    // Close tab after a delay
-    console.log("Closing tab!");
-    setTimeout(() => {
-        chrome.runtime.sendMessage({ action: "closeTab" });
-    }, 3000);
 }
 
 async function fetchApolloEmail() {

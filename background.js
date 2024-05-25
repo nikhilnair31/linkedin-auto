@@ -42,27 +42,43 @@ async function insertData(spreadsheetId, sheetName, data) {
     try {
         // Get token
         const token = await getAuthToken();
+        console.log("token: ", token);
         if (!token) {
             throw new Error('Failed to obtain OAuth token');
         }
         
         // Getting sheet details to know duplicates and row num to insert at
-        const response = await fetch(
-            `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}`,
-            {
-                method: "GET",
-                headers: { Authorization: `Bearer ${token}` },
+        let res;
+        const retries = 3;
+        for (let attempt = 1; attempt <= retries; attempt++) {
+            try {
+                const response = await fetch(
+                    `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}`,
+                    {
+                        method: "GET",
+                        headers: { Authorization: `Bearer ${token}` },
+                    }
+                );
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Failed to fetch sheet data: ${response.status} - ${response.statusText} - ${errorText}`);
+                }
+                res = await response.json();
+                console.log("res: ", res);
+            } 
+            catch (error) {
+                console.error(`Attempt ${attempt} failed: ${error.message}`);
+                if (attempt < retries && error.message.includes("503")) {
+                    const delay = Math.pow(2, attempt) * 1000;
+                    console.log(`Retrying in ${delay}ms...`);
+                    await new Promise(res => setTimeout(res, delay));
+                } 
+                else {
+                    throw error;
+                }
             }
-        );
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Failed to fetch sheet data: ${response.status} - ${response.statusText} - ${errorText}`);
         }
         
-        const res = await response.json();
-        console.log("res: ", res);
-
         // Check if the name already exists
         const nameExists = res.values.some(row => row[13] === data[0][13]);
         console.log("nameExists: ", nameExists);
@@ -83,12 +99,12 @@ async function insertData(spreadsheetId, sheetName, data) {
             // No duplicate found, continue with the insertion
             await continueInsert();
         }
-
+        
         async function continueInsert() {
             const rowLength = res.values ? res.values.length : 0;
             const colLength = res.values[0] ? res.values[0].length : 0;
             const range = `'${sheetName}'!A${rowLength + 1}`;
-
+            
             const updateResponse = await fetch(
                 encodeURI(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?valueInputOption=USER_ENTERED`),
                 {
@@ -106,24 +122,7 @@ async function insertData(spreadsheetId, sheetName, data) {
             }
             const result = await updateResponse.json();
             console.log("Update result: ", result);
-
-            // Fetch existing conditional formatting rules
-            const cfResponse = await fetch(
-                `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets(properties(title),conditionalFormats)`,
-                {
-                    method: "GET",
-                    headers: { Authorization: `Bearer ${token}` },
-                }
-            );
-            if (!cfResponse.ok) {
-                const errorText = await cfResponse.text();
-                throw new Error(`Failed to fetch conditional formatting: ${cfResponse.status} - ${cfResponse.statusText} - ${errorText}`);
-            }
-            const cfResult = await cfResponse.json();
-            console.log("Conditional formatting result: ", cfResult);
-            const conditionalFormats = cfResult.sheets.find(s => s.properties.title === sheetName).conditionalFormats || [];
-            console.log("conditionalFormats: ", conditionalFormats);
-
+            
             // Fetch sheet properties to get sheetId
             const sheetPropertiesResponse = await fetch(
                 `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets(properties(title,sheetId))`,
@@ -142,7 +141,7 @@ async function insertData(spreadsheetId, sheetName, data) {
                 throw new Error(`No sheet found with title: ${sheetName}`);
             }
             const sheetId = sheet.properties.sheetId;
-
+            
             // Clear the existing basic filter
             const clearFilterResponse = await fetch(
                 `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`,
@@ -192,13 +191,7 @@ async function insertData(spreadsheetId, sheetName, data) {
                                         },
                                     },
                                 },
-                            },
-                            ...conditionalFormats.map(cf => ({
-                                addConditionalFormatRule: {
-                                    rule: cf,
-                                    index: cf.index,
-                                },
-                            })),
+                            }
                         ],
                     }),
                 }
@@ -209,7 +202,13 @@ async function insertData(spreadsheetId, sheetName, data) {
             }
             const enableFilterResult = await enableFilterResponse.json();
             console.log("Enable filter result: ", enableFilterResult);
-
+            
+            // Close tab after a delay
+            console.log("Closing tab!");
+            setTimeout(() => {
+                chrome.runtime.sendMessage({ action: "closeTab" });
+            }, 3000);
+            
             return result;
         }
     } 
@@ -220,8 +219,6 @@ async function insertData(spreadsheetId, sheetName, data) {
 }
 
 function getAuthToken() {
-    console.log("getAuthToken");
-    
     return new Promise((resolve, reject) => {
         chrome.identity.getAuthToken({ interactive: true }, (token) => {
             if (chrome.runtime.lastError || !token) {
