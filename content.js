@@ -17,7 +17,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // Function to pull profile data
-function getProfileData() {
+function fullPull_ProfileData() {
     // Function to select type of connection
     function selectType(profileText) {
         if (profileText.includes('UT') || profileText.includes('The University of Texas at Austin')) {
@@ -33,29 +33,6 @@ function getProfileData() {
             return "General"
         }
     }
-    // Function to select message template
-    function selectMessageTemplate(typeText) {
-        if (typeText == "UT Alum") {
-            return "Hi {name}! As a fellow UT MSBA student, I'm really inspired by your journey at {company}. I'm looking into Data Science/Analyst roles & was wondering if you have any advice or know of any openings internally. I'd love to learn more about the role and possibly have you review my resume or refer me? Thanks!";
-        } 
-        if (typeText == "ZS Alum") {
-            return "Hi {name}! As a ZS alum and recent UT MSBA grad, I'm keen on Data Science/Analyst roles and inspired by your move to {company}. With 2 yrs in consulting & analytics, I believe I'd be a great fit. Would you have any advice or know of any openings on your team? I'd love a brief chat if you're available. Thanks!";
-        } 
-        if (typeText == "Recruiter") {
-            return "Hi {name}, I'm an MSBA grad from UT and an aspiring Data Scientist. With 2 years in pharma strategy consulting & analytics, I think I'd excel in similar roles at {company}.  I'd love to connect and discuss further opportunities if you'd be open to a brief chat/resume review? Thanks!";
-        } 
-        if (typeText == "General") {
-            return "Hi {name}! As an MSBA grad from UT, I'm inspired by your journey at {company} & interested in Data Science/Analyst roles. With 2 yrs in pharma strategy consulting & analytics, I believe I'd be a great fit. I'd love to connect and discuss opportunities if you'd be open to a brief chat? Thanks!";
-        }
-    }
-    // Function to customize the template
-    function customizeTemplate(template, name, company) {
-        return template.replace("{name}", name).replace("{company}", company);
-    }
-    // Function to get the first word
-    function getFirstWord(str) {
-        return str.split(' ')[0];
-    }
     // Function to get current date in format
     function formatDate(date) {
         const day = date.getDate();
@@ -63,40 +40,43 @@ function getProfileData() {
         const year = date.getFullYear();
         return `${month}/${day}/${year}`;
     }
+    // Function to get the first word
+    function getFirstWord(str) {
+        return str.split(' ')[0];
+    }
+    // Function to select message template
+    function selectMessageTemplate(typeText) {
+        if (typeText == "UT Alum") {
+            return "Hi {name}! As a fellow UT grad in MSBA, I'm really inspired by your journey at {company}. I'm looking into Data Science/Analyst roles & was wondering if you have any advice or know of any internal openings. I'd love to learn more about the role & possibly have you review my resume/refer me? Thanks!";
+        } 
+        if (typeText == "ZS Alum") {
+            return "Hi {name}! As a ZS alum & recent UT MSBA grad, I'm keen on Data Science/Analyst roles & inspired by your move to {company}. With 2 yrs in consulting & analytics, I believe I'd be a great fit. Would you have any advice or know of any openings on your team? I'd love a brief chat if you're available. Thanks!";
+        } 
+        if (typeText == "Recruiter") {
+            return "Hi {name}, I'm an MSBA grad from UT & an aspiring Data Scientist. With 2 years in strategy consulting & analytics, I think I'd excel in similar roles at {company}.  I'd love to connect & discuss further opportunities if you'd be open to a brief chat/resume review? Thanks!";
+        } 
+        if (typeText == "General") {
+            return "Hi {name}! As an MSBA grad from UT, I'm inspired by your journey at {company} & interested in Data Science/Analyst roles. With 2 yrs in strategy consulting & analytics, I believe I'd be a great fit. I'd love to connect & discuss opportunities if you'd be open to a brief chat? Thanks!";
+        }
+    }
+    // Function to customize the template
+    function customizeTemplate(template, name, company) {
+        return template.replace("{name}", name).replace("{company}", company);
+    }
     
-    // Extract profile details
-    let currDate = formatDate(new Date());
-    let profileText = document.querySelector(".mt2.relative").innerText;
-    
-    // Get name and profile URL
-    let profileUrl = window.location.href;
+    // Check for profile name
     let fullName = document.querySelector(".text-heading-xlarge.inline.t-24.v-align-middle.break-words").innerText;
     let firstName = getFirstWord(fullName);
-    let formattedName = `=HYPERLINK("${profileUrl}", "${fullName}")`;
     
     // Check for the company element
     let companyElement = document.querySelector(".QXKGsjdyqdqwHmLQHekyaekuIfvbFzrvlkJI .rapjPUgpodXzhasLarIJxQRvagGOVLaRjEfkM");
     let company = companyElement ? companyElement.innerText.trim() : "-";
     
-    // Check for the school element
-    let schoolElement = document.querySelector(".QXKGsjdyqdqwHmLQHekyaekuIfvbFzrvlkJI .pv-text-details__right-panel-item-text");
-    let school = schoolElement ? schoolElement.innerText.trim() : "-";
-    
-    // Fetch email from Apollo depending on connection type
+    // Fetch recruiter status
+    let profileText = document.querySelector(".mt2.relative").innerText;
+    // console.log(`profileText: ${profileText}`);
     let type = selectType(profileText);
     let isRecruiter = (type === "Recruiter") ? "Y" : "N";
-    
-    let email = "-";
-    if (type === "Recruiter") {
-        fetchApolloEmail()
-        .then(response => {
-            email = response;
-            console.log("response: ", email);
-        })
-        .catch(error => {
-            console.log("error: ", error.message);
-        });
-    }
     
     // Update the message variable to contain the updated message
     let template = "-";
@@ -110,20 +90,21 @@ function getProfileData() {
         message = customizeTemplate(template, firstName, company);
     }
     
-    // Log the message to the console
-    console.log(`currDate: ${currDate}`);
-    console.log(`profileText: ${profileText}`);
-    console.log(`profileUrl: ${profileUrl}`);
-    console.log(`fullName: ${fullName}`);
-    console.log(`firstName: ${firstName}`);
-    console.log(`formattedName: ${formattedName}`);
-    console.log(`company: ${company}`);
-    console.log(`school: ${school}`);
-    console.log(`email: ${email}`);
-    console.log(`type: ${type}`);
-    console.log(`template: ${template}`);
-    console.log(`message: ${message}`);
+    // Keep empty email var
+    let email = "-";
     
+    // Extract today's date formatted
+    let currDate = formatDate(new Date());
+    
+    // Get name and profile URL
+    let profileUrl = window.location.href;
+    let formattedName = `=HYPERLINK("${profileUrl}", "${fullName}")`;
+    
+    // Check for the school element
+    let schoolElement = document.querySelector(".QXKGsjdyqdqwHmLQHekyaekuIfvbFzrvlkJI .pv-text-details__right-panel-item-text");
+    let school = schoolElement ? schoolElement.innerText.trim() : "-";
+    
+    // Create array of data to then insert
     const data = [[
         formattedName,
         'Y',
@@ -150,16 +131,16 @@ function getProfileData() {
     }
     console.log("cleaned data: ", data);
     
-    return data
+    return data;
 }
 
 function automateLinkedIn() {
     console.log("automateLinkedIn");
     
-    // Populating Profile related vars
-    const data = getProfileData();
-    fullName = data[0][0];
-    message = data[0][13];
+    // Retreieve initial Profile related vars
+    const data = fullPull_ProfileData();
+    const fullName = data[0][0];
+    const message = data[0][13];
     
     // Function to click the connect button
     function clickConnectButton(profileName) {
@@ -252,64 +233,14 @@ function dataToSheet() {
                 action: 'insertData',
                 spreadsheetId,
                 sheetName,
-                data: getProfileData()
+                data: fullPull_ProfileData()
             },
             (response) => {
                 console.log("Response:", response);
-                response.status === 'success'
-                ? console.log('Data inserted:', response.response)
-                : console.error('Error inserting data:', response.error);
             }
         );
     });
     
     console.log("Closing tab!");
     setTimeout(() => chrome.runtime.sendMessage({ action: "closeTab" }), 1000);
-}
-
-async function fetchApolloEmail() {
-    console.log("fetchApolloEmail");
-    
-    try {
-        const { saved_apolloApiKey: apiKey } = await chrome.storage.local.get('saved_apolloApiKey');
-        
-        if (!apiKey) {
-            console.error("API key not found in storage.");
-            return;
-        }
-        
-        const apiUrl = "https://api.apollo.io/v1/people/match";
-        const requestData = {
-            linkedin_url: window.location.href
-        };
-        
-        const response = await fetch(apiUrl, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Cache-Control": "no-cache",
-                "X-Api-Key": apiKey
-            },
-            body: JSON.stringify(requestData)
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log("data: ", data);
-        
-        if (data.person && data.person.email) {
-            console.log("Email: ", data.person.email);
-            return data.person.email;
-        } 
-        else {
-            console.log("Email not found in response.");
-            return "-";
-        }
-    } 
-    catch (error) {
-        console.error("Error fetching email:", error);
-    }
 }
