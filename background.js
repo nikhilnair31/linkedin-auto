@@ -29,7 +29,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true; // Keep the message channel open for sendResponse
     }
     if (message.action === "closeTab") {
-        chrome.tabs.remove(sender.tab.id);
+        if (sender.tab && sender.tab.id) {
+            chrome.tabs.remove(sender.tab.id, () => {
+                if (chrome.runtime.lastError) {
+                    console.error('Failed to close tab:', chrome.runtime.lastError);
+                } else {
+                    console.log('Tab closed successfully');
+                }
+            });
+        } else {
+            console.error('No sender tab or tab ID found');
+        }
     }
 });
 
@@ -202,14 +212,6 @@ async function insertData(spreadsheetId, sheetName, data) {
             }
             const enableFilterResult = await enableFilterResponse.json();
             console.log("Enable filter result: ", enableFilterResult);
-            
-            // Close tab after a delay
-            console.log("Closing tab!");
-            setTimeout(() => {
-                chrome.runtime.sendMessage({ action: "closeTab" });
-            }, 3000);
-            
-            return result;
         }
     } 
     catch (error) {

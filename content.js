@@ -225,28 +225,27 @@ function automateLinkedIn() {
 }
 function dataToSheet() {
     console.log("dataToSheet");
-    
-    // Get sheetId and name and send message to insert data
-    chrome.storage.local.get(['saved_spreadsheetId', 'saved_sheetName'], function(result) {
+
+    chrome.storage.local.get(['saved_spreadsheetId', 'saved_sheetName'], (result) => {
+        const { saved_spreadsheetId: spreadsheetId, saved_sheetName: sheetName } = result;
         chrome.runtime.sendMessage(
             {
                 action: 'insertData',
-                spreadsheetId: result.saved_spreadsheetId,
-                sheetName: result.saved_sheetName,
+                spreadsheetId,
+                sheetName,
                 data: getProfileData()
             },
             (response) => {
-                console.log("insertDataToSheet: Received response from background script", response);
-                
-                if (response.status === 'success') {
-                    console.log('Data inserted:', response.response);
-                } 
-                else {
-                    console.error('Error inserting data:', response.error);
-                }
+                console.log("Response:", response);
+                response.status === 'success'
+                    ? console.log('Data inserted:', response.response)
+                    : console.error('Error inserting data:', response.error);
             }
         );
     });
+
+    console.log("Closing tab!");
+    setTimeout(() => chrome.runtime.sendMessage({ action: "closeTab" }), 1000);
 }
 
 async function fetchApolloEmail() {
