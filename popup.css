@@ -5,6 +5,7 @@ body {
     padding: 20px;
     width: 300px; /* Adjusted to make the popup wider */
     background-color: #1d1d1d;
+    border-radius: 5px;
 }
 
 h1 {

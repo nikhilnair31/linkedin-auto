@@ -82,10 +82,21 @@ function getProfileData() {
     let schoolElement = document.querySelector(".QXKGsjdyqdqwHmLQHekyaekuIfvbFzrvlkJI .pv-text-details__right-panel-item-text");
     let school = schoolElement ? schoolElement.innerText.trim() : "-";
     
-    // Fecth email from Apollo depending on connection type
+    // Fetch email from Apollo depending on connection type
     let type = selectType(profileText);
     let isRecruiter = (type === "Recruiter") ? "Y" : "N";
-    let email = (type === "Recruiter") ? fetchApolloEmail() : "-";
+    
+    let email = "-";
+    if (type === "Recruiter") {
+        fetchApolloEmail()
+        .then(response => {
+            email = response;
+            console.log("response: ", email);
+        })
+        .catch(error => {
+            console.log("error: ", error.message);
+        });
+    }
     
     // Update the message variable to contain the updated message
     let template = "-";
@@ -130,6 +141,14 @@ function getProfileData() {
         message,
     ]];
     console.log("data: ", data);
+    
+    // Validate data before returning
+    for (let i = 0; i < data[0].length; i++) {
+        if (data[0][i] === undefined || data[0][i] === null || (typeof data[0][i] === 'object' && Object.keys(data[0][i]).length === 0)) {
+            data[0][i] = '-';
+        }
+    }
+    console.log("cleaned data: ", data);
     
     return data
 }
@@ -225,7 +244,7 @@ function automateLinkedIn() {
 }
 function dataToSheet() {
     console.log("dataToSheet");
-
+    
     chrome.storage.local.get(['saved_spreadsheetId', 'saved_sheetName'], (result) => {
         const { saved_spreadsheetId: spreadsheetId, saved_sheetName: sheetName } = result;
         chrome.runtime.sendMessage(
@@ -238,12 +257,12 @@ function dataToSheet() {
             (response) => {
                 console.log("Response:", response);
                 response.status === 'success'
-                    ? console.log('Data inserted:', response.response)
-                    : console.error('Error inserting data:', response.error);
+                ? console.log('Data inserted:', response.response)
+                : console.error('Error inserting data:', response.error);
             }
         );
     });
-
+    
     console.log("Closing tab!");
     setTimeout(() => chrome.runtime.sendMessage({ action: "closeTab" }), 1000);
 }
