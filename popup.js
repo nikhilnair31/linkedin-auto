@@ -38,3 +38,9 @@ document.getElementById("insertButton").addEventListener("click", () => {
         chrome.tabs.sendMessage(tabs[0].id, { action: "insertData" });
     });
 });
+
+document.getElementById("updateStatusButton").addEventListener("click", () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.tabs.sendMessage(tabs[0].id, { action: "updateStatus" });
+    });
+});

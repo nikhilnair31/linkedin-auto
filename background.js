@@ -17,6 +17,11 @@ chrome.commands.onCommand.addListener((command) => {
             chrome.tabs.sendMessage(tabs[0].id, { action: "insertData" });
         });
     }
+    if (command === "start-updatestatus-cmd") {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            chrome.tabs.sendMessage(tabs[0].id, { action: "updateStatus" });
+        });
+    }
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -24,6 +29,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     
     if (message.action === 'insertData') {
         insertData(message.spreadsheetId, message.sheetName, message.data)
+        .then(response => sendResponse({ status: 'success', response }))
+        .catch(error => sendResponse({ status: 'error', error: error.message }));
+        return true; // Keep the message channel open for sendResponse
+    }
+    if (message.action === 'updateStatus') {
+        updateStatus(message.spreadsheetId, message.sheetName, message.profileName, message.status)
         .then(response => sendResponse({ status: 'success', response }))
         .catch(error => sendResponse({ status: 'error', error: error.message }));
         return true; // Keep the message channel open for sendResponse
@@ -213,6 +224,77 @@ async function insertData(spreadsheetId, sheetName, data) {
             const enableFilterResult = await enableFilterResponse.json();
             console.log("Enable filter result: ", enableFilterResult);
         }
+    } 
+    catch (error) {
+        console.error('Error in insertData function:', error);
+        throw error;
+    }
+}
+async function updateStatus(spreadsheetId, sheetName, profileName, status) {
+    console.log("updateStatus");
+    console.log("spreadsheetId: ", spreadsheetId);
+    console.log("sheetName: ", sheetName);
+    console.log("profileName: ", profileName);
+    console.log("status: ", status);
+    
+    try {
+        // Get token
+        const token = await getAuthToken();
+        console.log("token: ", token);
+        if (!token) {
+            throw new Error('Failed to obtain OAuth token');
+        }
+
+        // Fetch the sheet data to find the column with the matching URL
+        const sheetDataResponse = await fetch(
+            `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}`,
+            {
+                method: "GET",
+                headers: { Authorization: `Bearer ${token}` },
+            }
+        );
+        if (!sheetDataResponse.ok) {
+            const errorText = await sheetDataResponse.text();
+            throw new Error(`Failed to fetch sheet data: ${sheetDataResponse.status} - ${sheetDataResponse.statusText} - ${errorText}`);
+        }
+        const sheetData = await sheetDataResponse.json();
+        // console.log(`sheetData: ${sheetData}`);
+        const values = sheetData.values;
+        // console.log(`rows: ${rows}`);
+        
+        let rowIndex = -1;
+        for (let i = 0; i < values.length; i++) {
+            if (values[i][0] === profileName) {
+                console.log(`values[i][0]: ${values[i][0]}`);
+                rowIndex = i;
+                break;
+            }
+        }
+        if (rowIndex === -1) {
+            throw new Error(`Profile not found in the sheet.`);
+        }
+        console.log(`rowIndex: ${rowIndex}`);
+        
+        // Update the status in the found cell
+        const range = `${sheetName}!H${rowIndex + 1}`;
+        console.log(`range: ${range}`);
+        const updateResponse = await fetch(
+            `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?valueInputOption=USER_ENTERED`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ values: [[status]] }),
+            }
+        );
+        if (!updateResponse.ok) {
+            const errorText = await updateResponse.text();
+            throw new Error(`Failed to update sheet data: ${updateResponse.status} - ${updateResponse.statusText} - ${errorText}`);
+        }
+        const result = await updateResponse.json();
+        console.log("Update result: ", result);
     } 
     catch (error) {
         console.error('Error in insertData function:', error);

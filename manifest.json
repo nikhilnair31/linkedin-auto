@@ -40,7 +40,7 @@
     "commands": {
         "start-automation-cmd": {
             "suggested_key": {
-                "default": "Ctrl+Shift+L"
+                "default": "Ctrl+Shift+1"
             },
             "description": "Start LinkedIn Automation"
         },
@@ -49,6 +49,12 @@
                 "default": "Ctrl+Shift+2"
             },
             "description": "Insert Data to Google Sheet"
+        },
+        "start-statusupdate-cmd": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+3"
+            },
+            "description": "Update Status in Google Sheet (FIXME: Doesn't work though)"
         }
     }
 }

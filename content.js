@@ -1,5 +1,15 @@
 // content.js
 
+function onPageLoad() {
+    if (window.location.hostname === "www.linkedin.com" && window.location.href.includes("?id=statusCH3CK")) {
+        updatedStatusInSheet();
+    }
+}
+function runAfterDelay() {
+    setTimeout(onPageLoad, 2000);
+}
+runAfterDelay();
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log("chrome.runtime.onMessage.addListener");
     console.log(`message.action: ${message.action}`);
@@ -9,6 +19,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
     if (message.action === "insertData") {
         dataToSheet();
+    }
+    if (message.action === "updateStatus") {
+        updatedStatusInSheet();
     }
     if (message.action === 'confirmDuplicate') {
         const confirmOverride = confirm(`Profile already exists in the sheet. Do you want to override and insert a duplicate?`);
@@ -69,8 +82,9 @@ function fullPull_ProfileData() {
     let firstName = getFirstWord(fullName);
     
     // Check for the company element
-    let companyElement = document.querySelector(".QXKGsjdyqdqwHmLQHekyaekuIfvbFzrvlkJI .rapjPUgpodXzhasLarIJxQRvagGOVLaRjEfkM");
+    let companyElement = document.querySelector(".pv-text-details__right-panel button[aria-label*='Current company']");
     let company = companyElement ? companyElement.innerText.trim() : "-";
+    console.log(`company: ${company}`);
     
     // Fetch recruiter status
     let profileText = document.querySelector(".mt2.relative").innerText;
@@ -120,6 +134,70 @@ function fullPull_ProfileData() {
         '-',
         isRecruiter,
         message,
+        '-'
+    ]];
+    console.log("data: ", data);
+    
+    // Validate data before returning
+    for (let i = 0; i < data[0].length; i++) {
+        if (data[0][i] === undefined || data[0][i] === null || (typeof data[0][i] === 'object' && Object.keys(data[0][i]).length === 0)) {
+            data[0][i] = '-';
+        }
+    }
+    console.log("cleaned data: ", data);
+    
+    return data;
+}
+// Function to get profile's status
+function status_ProfileData() {
+    // Function to check the current connection status
+    function getCurrentStatus(fullName) {
+        const selectors = {
+            yetToConnect: [
+                `.ph5.pb5 button[aria-label*='Invite']`,
+                `.ph5.pb5 button[aria-label*='Invite ${fullName} to connect'] button`,
+                // `.ph5.pb5 div[aria-label*='Invite ${fullName} to connect'] button`,
+                // `.ph5 button[aria-label*='Invite']`,
+                // `.ph5 button[aria-label*='Invite ${fullName} to connect'] button`,
+                // `.ph5 div[aria-label*='Invite ${fullName} to connect'] button`
+            ],
+            pendingConnection: [
+                `.ph5.pb5 button[aria-label*='Pending']`,
+                `.ph5.pb5 button[aria-label*='Pending, click to withdraw invitation sent to ${fullName}']`,
+                `.ph5 button[aria-label*='Pending']`,
+                `.ph5 button[aria-label*='Pending, click to withdraw invitation sent to ${fullName}']`,
+            ],
+            completedConnection: [
+                `.ph5.pb5 button[aria-label*='Remove']`,
+                `.ph5.pb5 button[aria-label*='Remove your connection to ${fullName}']`,
+                `.ph5 button[aria-label*='Remove']`,
+                `.ph5 button[aria-label*='Remove your connection to ${fullName}']`,
+            ]
+        };
+
+        for (const [status, elements] of Object.entries(selectors)) {
+            if (elements.some(selector => document.querySelector(selector))) {
+                if (status === "yetToConnect") {
+                    return "YET TO SEND CONNECTION REQUEST"
+                }
+                else if (status === "pendingConnection") {
+                    return "PENDING"
+                }
+                else if (status === "completedConnection") {
+                    return "NEED TO THANK THEM FOR ACCEPTING"
+                }
+            }
+        }
+        return "-";
+    }
+
+    let fullName = document.querySelector(".text-heading-xlarge.inline.t-24.v-align-middle.break-words").innerText;
+    let currStatus = getCurrentStatus(fullName);
+    
+    // Create array of data to then insert
+    const data = [[
+        fullName,
+        currStatus,
     ]];
     console.log("data: ", data);
     
@@ -134,6 +212,7 @@ function fullPull_ProfileData() {
     return data;
 }
 
+// Function to run on message action
 function automateLinkedIn() {
     console.log("automateLinkedIn");
     
@@ -234,6 +313,35 @@ function dataToSheet() {
                 spreadsheetId,
                 sheetName,
                 data: fullPull_ProfileData()
+            },
+            (response) => {
+                console.log("Response:", response);
+            }
+        );
+    });
+    
+    console.log("Closing tab!");
+    setTimeout(() => chrome.runtime.sendMessage({ action: "closeTab" }), 1000);
+}
+function updatedStatusInSheet() {
+    console.log("updatedStatusInSheet");
+    
+    chrome.storage.local.get(['saved_spreadsheetId', 'saved_sheetName'], (result) => {
+        const { saved_spreadsheetId: spreadsheetId, saved_sheetName: sheetName } = result;
+        const data = status_ProfileData();
+        console.log(`data: ${data}`);
+        const profileName = data[0][0];
+        console.log(`profileName: ${profileName}`);
+        const status = data[0][1];
+        console.log(`status: ${status}`);
+
+        chrome.runtime.sendMessage(
+            {
+                action: 'updateStatus',
+                spreadsheetId,
+                sheetName,
+                profileName,
+                status
             },
             (response) => {
                 console.log("Response:", response);
