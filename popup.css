@@ -1,5 +1,3 @@
-/* popup.css */
-
 body {
     font-family: Arial, sans-serif;
     padding: 20px;
@@ -21,7 +19,7 @@ label {
     color: white;
 }
 
-input {
+input[type="text"] {
     display: block;
     width: 100%; /* Adjusted to match button width */
     padding: 10px;
@@ -47,4 +45,18 @@ button {
 
 button:hover {
     background-color: #c0315c;
+}
+
+input[type="checkbox"] {
+    display: inline-block;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+
+.checkbox-label {
+    font-size: 14px;
+    color: white;
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
 }

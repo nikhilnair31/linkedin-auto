@@ -54,7 +54,7 @@
             "suggested_key": {
                 "default": "Ctrl+Shift+3"
             },
-            "description": "Update Status in Google Sheet (FIXME: Doesn't work though)"
+            "description": "Update Status in Google Sheet"
         }
     }
 }

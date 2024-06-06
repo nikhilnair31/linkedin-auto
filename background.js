@@ -14,10 +14,10 @@ chrome.commands.onCommand.addListener((command) => {
     }
     if (command === "start-insert-cmd") {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            chrome.tabs.sendMessage(tabs[0].id, { action: "insertData" });
+            chrome.tabs.sendMessage(tabs[0].id, { action: "insertData", sentReq: false });
         });
     }
-    if (command === "start-updatestatus-cmd") {
+    if (command === "start-statusupdate-cmd") {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             chrome.tabs.sendMessage(tabs[0].id, { action: "updateStatus" });
         });

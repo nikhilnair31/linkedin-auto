@@ -18,7 +18,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         automateLinkedIn();
     }
     if (message.action === "insertData") {
-        dataToSheet();
+        dataToSheet(message.sentReq);
     }
     if (message.action === "updateStatus") {
         updatedStatusInSheet();
@@ -284,7 +284,7 @@ function automateLinkedIn() {
     if (targetNode) {
         const attachEventListener = (sendButton) => {
             if (sendButton) {
-                sendButton.addEventListener("click", dataToSheet);
+                sendButton.addEventListener("click", () => dataToSheet(true));
                 console.log("Event listener attached to Send button");
             }
         };
@@ -306,17 +306,20 @@ function automateLinkedIn() {
         console.error("Target node #artdeco-modal-outlet not found");
     }
 }
-function dataToSheet() {
+function dataToSheet(sentConnReq) {
     console.log("dataToSheet");
     
     chrome.storage.local.get(['saved_spreadsheetId', 'saved_sheetName'], (result) => {
         const { saved_spreadsheetId: spreadsheetId, saved_sheetName: sheetName } = result;
+        let fullData = fullPull_ProfileData();
+        fullData[0][1] = (sentConnReq) ? 'Y' : 'N';
+
         chrome.runtime.sendMessage(
             {
                 action: 'insertData',
                 spreadsheetId,
                 sheetName,
-                data: fullPull_ProfileData()
+                data: fullData
             },
             (response) => {
                 console.log("Response:", response);
