@@ -156,22 +156,26 @@ function status_ProfileData() {
             yetToConnect: [
                 `.ph5.pb5 button[aria-label*='Invite']`,
                 `.ph5.pb5 button[aria-label*='Invite ${fullName} to connect'] button`,
-                // `.ph5.pb5 div[aria-label*='Invite ${fullName} to connect'] button`,
-                // `.ph5 button[aria-label*='Invite']`,
-                // `.ph5 button[aria-label*='Invite ${fullName} to connect'] button`,
-                // `.ph5 div[aria-label*='Invite ${fullName} to connect'] button`
+                `.ph5.pb5 div[aria-label*='Invite ${fullName} to connect'] button`,
+                `.ph5 button[aria-label*='Invite']`,
+                `.ph5 button[aria-label*='Invite ${fullName} to connect'] button`,
+                `.ph5 div[aria-label*='Invite ${fullName} to connect'] button`,
             ],
             pendingConnection: [
                 `.ph5.pb5 button[aria-label*='Pending']`,
-                `.ph5.pb5 button[aria-label*='Pending, click to withdraw invitation sent to ${fullName}']`,
+                `.ph5.pb5 button[aria-label*='Pending, click to withdraw invitation sent to ${fullName}'] button`,
+                `.ph5.pb5 div[aria-label*='Pending, click to withdraw invitation sent to ${fullName}'] button`,
                 `.ph5 button[aria-label*='Pending']`,
-                `.ph5 button[aria-label*='Pending, click to withdraw invitation sent to ${fullName}']`,
+                `.ph5 button[aria-label*='Pending, click to withdraw invitation sent to ${fullName}'] button`,
+                `.ph5 div[aria-label*='Pending, click to withdraw invitation sent to ${fullName}'] button`,
             ],
             completedConnection: [
                 `.ph5.pb5 button[aria-label*='Remove']`,
-                `.ph5.pb5 button[aria-label*='Remove your connection to ${fullName}']`,
+                `.ph5.pb5 button[aria-label*='Remove your connection to ${fullName}'] button`,
+                `.ph5.pb5 div[aria-label*='Remove your connection to ${fullName}'] button`,
                 `.ph5 button[aria-label*='Remove']`,
-                `.ph5 button[aria-label*='Remove your connection to ${fullName}']`,
+                `.ph5 button[aria-label*='Remove your connection to ${fullName}'] button`,
+                `.ph5 div[aria-label*='Remove your connection to ${fullName}'] button`,
             ]
         };
 
@@ -181,7 +185,7 @@ function status_ProfileData() {
                     return "YET TO SEND CONNECTION REQUEST"
                 }
                 else if (status === "pendingConnection") {
-                    return "PENDING"
+                    return "-"
                 }
                 else if (status === "completedConnection") {
                     return "NEED TO THANK THEM FOR ACCEPTING"
