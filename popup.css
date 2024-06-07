@@ -12,30 +12,53 @@ h1 {
     color: white;
 }
 
+h2 {
+    font-size: 16px;
+    margin: 0px;
+    color: white;
+    padding: 10px 0px;
+}
+
+.block {
+    display: flex;
+    row-gap: 2px;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+}
+.block2 {
+    display: flex;
+    column-gap: 5px;
+}
+
+.same-line {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
 label {
     font-size: 14px;
-    margin-bottom: 5px;
     display: block;
     color: white;
+    text-align: left;
+    width: 50%;
 }
 
 input[type="text"] {
     display: block;
-    width: 100%; /* Adjusted to match button width */
+    width: 75%;
     padding: 10px;
-    margin-bottom: 10px;
     border-radius: 5px;
-    box-sizing: border-box;
     background-color: #353535;
     border: 1px solid #222222;
     color: white;
 }
 
 button {
-    display: block;
     width: 100%;
     padding: 10px;
-    margin-bottom: 10px;
     background-color: #e43a6d;
     color: white;
     border: none;
@@ -49,7 +72,7 @@ button:hover {
 
 input[type="checkbox"] {
     display: inline-block;
-    margin-right: 10px;
+    margin: 10px;
     vertical-align: middle;
 }
 
