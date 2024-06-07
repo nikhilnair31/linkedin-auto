@@ -72,8 +72,29 @@ button:hover {
 
 input[type="checkbox"] {
     display: inline-block;
-    margin: 10px;
-    vertical-align: middle;
+    margin: 10px 0px;
+    /* vertical-align: middle; */
+    width: 20px;
+    height: 20px;
+    background-color: #353535;
+    border: 1px solid #222222;
+    border-radius: 3px;
+    appearance: none;
+    cursor: pointer;
+}
+
+input[type="checkbox"]:checked {
+    background-color: #e43a6d;
+    border: 1px solid #c0315c;
+}
+
+input[type="checkbox"]:checked::after {
+    /* content: 'âœ”'; */
+    display: block;
+    color: white;
+    font-size: 14px;
+    text-align: center;
+    line-height: 20px;
 }
 
 .checkbox-label {

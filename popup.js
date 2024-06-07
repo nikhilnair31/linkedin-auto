@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load the saved value
     chrome.storage.local.get(
-        ['saved_spreadsheetId', 'saved_sheetName', 'saved_uniqueId', 'saved_sentConnReq'], 
+        ['saved_spreadsheetId', 'saved_sheetName', 'saved_uniqueId', 'saved_autoCloseTabs'], 
         function(result) {
             if (result.saved_spreadsheetId) {
                 inputBox_spreadsheetId.value = result.saved_spreadsheetId;
@@ -19,8 +19,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (result.saved_uniqueId) {
                 inputBox_uniqueId.value = result.saved_uniqueId;
             }
-            if (result.saved_sentConnReq) {
-                checkbox_sentConnReq.checked = result.saved_sentConnReq;
+            if (result.saved_autoCloseTabs) {
+                checkbox_autoCloseTabs.checked = result.saved_autoCloseTabs;
             }
         }
     );

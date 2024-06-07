@@ -1,9 +1,12 @@
 // content.js
 
 function onPageLoad() {
-    if (window.location.hostname === "www.linkedin.com" && window.location.href.includes("?id=statusCH3CK")) {
-        updatedStatusInSheet();
-    }
+    chrome.storage.local.get(['saved_uniqueId'], (result) => {
+        const uniqueId = result.saved_uniqueId || 'statusCH3CK';
+        if (window.location.hostname === "www.linkedin.com" && window.location.href.includes(`?id=${uniqueId}`)) {
+            updatedStatusInSheet();
+        }
+    });
 }
 function runAfterDelay() {
     setTimeout(onPageLoad, 2000);
@@ -327,8 +330,15 @@ function dataToSheet(sentConnReq) {
         );
     });
     
-    console.log("Closing tab!");
-    setTimeout(() => chrome.runtime.sendMessage({ action: "closeTab" }), 1000);
+    // console.log("Closing tab!");
+    // setTimeout(() => chrome.runtime.sendMessage({ action: "closeTab" }), 1000);
+    
+    chrome.storage.local.get(['saved_autoCloseTabs'], (result) => {
+        if (result.saved_autoCloseTabs) {
+            console.log("Closing tab!");
+            setTimeout(() => chrome.runtime.sendMessage({ action: "closeTab" }), 1000);
+        }
+    });
 }
 function updatedStatusInSheet() {
     console.log("updatedStatusInSheet");
@@ -356,6 +366,10 @@ function updatedStatusInSheet() {
         );
     });
     
-    console.log("Closing tab!");
-    setTimeout(() => chrome.runtime.sendMessage({ action: "closeTab" }), 1000);
+    chrome.storage.local.get(['saved_autoCloseTabs'], (result) => {
+        if (result.saved_autoCloseTabs) {
+            console.log("Closing tab!");
+            setTimeout(() => chrome.runtime.sendMessage({ action: "closeTab" }), 1000);
+        }
+    });
 }
