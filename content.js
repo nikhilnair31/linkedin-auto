@@ -3,7 +3,10 @@
 function onPageLoad() {
     chrome.storage.local.get(['saved_uniqueId'], (result) => {
         const uniqueId = result.saved_uniqueId || 'statusCH3CK';
-        if (window.location.hostname === "www.linkedin.com" && window.location.href.includes(`?id=${uniqueId}`)) {
+        console.log(`onPageLoad uniqueId: ${uniqueId}`);
+        console.log(`window.location.href: ${window.location.href}`);
+        console.log(`window.location.href.includes(?id=${uniqueId}): ${window.location.href.includes(uniqueId)}`);
+        if (window.location.hostname === "www.linkedin.com" && window.location.href.includes(uniqueId)) {
             updatedStatusInSheet();
         }
     });
