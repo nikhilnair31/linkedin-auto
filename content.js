@@ -3,9 +3,6 @@
 function onPageLoad() {
     chrome.storage.local.get(['saved_uniqueId'], (result) => {
         const uniqueId = result.saved_uniqueId || 'statusCH3CK';
-        console.log(`onPageLoad uniqueId: ${uniqueId}`);
-        console.log(`window.location.href: ${window.location.href}`);
-        console.log(`window.location.href.includes(?id=${uniqueId}): ${window.location.href.includes(uniqueId)}`);
         if (window.location.hostname === "www.linkedin.com" && window.location.href.includes(uniqueId)) {
             updatedStatusInSheet();
         }
@@ -155,71 +152,154 @@ function fullPull_ProfileData() {
     return data;
 }
 // Function to get profile's status
+// TODO: Update this whole logic so user can open LinkedIn Messaging and run on all connections visible on that page
 function status_ProfileData() {
-    // Function to check the current connection status
-    function getCurrentStatus(fullName) {
-        const selectors = {
-            yetToConnect: [
-                `.ph5.pb5 button[aria-label*='Invite']`,
-                `.ph5.pb5 button[aria-label*='Invite ${fullName} to connect'] button`,
-                `.ph5.pb5 div[aria-label*='Invite ${fullName} to connect']`,
-                `.ph5 button[aria-label*='Invite']`,
-                `.ph5 button[aria-label*='Invite ${fullName} to connect'] button`,
-                `.ph5 div[aria-label*='Invite ${fullName} to connect']`,
-            ],
-            pendingConnection: [
-                `.ph5.pb5 button[aria-label*='Pending']`,
-                `.ph5.pb5 button[aria-label*='Pending, click to withdraw invitation sent to ${fullName}'] button`,
-                `.ph5.pb5 div[aria-label*='Pending, click to withdraw invitation sent to ${fullName}']`,
-                `.ph5 button[aria-label*='Pending']`,
-                `.ph5 button[aria-label*='Pending, click to withdraw invitation sent to ${fullName}'] button`,
-                `.ph5 div[aria-label*='Pending, click to withdraw invitation sent to ${fullName}']`,
-            ],
-            completedConnection: [
-                `.ph5.pb5 button[aria-label*='Remove']`,
-                `.ph5.pb5 button[aria-label*='Remove your connection to ${fullName}'] button`,
-                `.ph5.pb5 div[aria-label*='Remove your connection to ${fullName}']`,
-                `.ph5 button[aria-label*='Remove']`,
-                `.ph5 button[aria-label*='Remove your connection to ${fullName}'] button`,
-                `.ph5 div[aria-label*='Remove your connection to ${fullName}']`,
-            ]
-        };
+    return new Promise((resolve) => {
+        let fullName = document.querySelector(".text-heading-xlarge.inline.t-24.v-align-middle.break-words").innerText;
 
-        for (const [status, elements] of Object.entries(selectors)) {
-            if (elements.some(selector => document.querySelector(selector))) {
-                if (status === "yetToConnect") {
-                    return "YET TO SEND CONNECTION REQUEST"
-                }
-                else if (status === "pendingConnection") {
-                    return "PENDING"
-                }
-                else if (status === "completedConnection") {
-                    return "NEED TO THANK THEM FOR ACCEPTING"
-                }
+        // Function to get the first word
+        function getFirstWord(str) {
+            return str.split(' ')[0];
+        }
+        let firstName = getFirstWord(fullName);
+
+        // Function to click the message button
+        function clickMessageButton(profileName) {
+            const messageButton = document.querySelector(`.ph5.pb5 button[aria-label*='Message']`) ||
+            document.querySelector(`.ph5.pb5 button[aria-label*='Message ${profileName}'] button`) ||
+            document.querySelector(`.ph5.pb5 div[aria-label*='Message ${profileName}'] button`) ||
+            document.querySelector(`.ph5 button[aria-label*='Message']`) ||
+            document.querySelector(`.ph5 button[aria-label*='Message ${profileName}'] button`) ||
+            document.querySelector(`.ph5 div[aria-label*='Message ${profileName}'] button`);
+            
+            if (messageButton) {
+                console.log(`messageButton: ${messageButton}`);
+                messageButton.click();
+            }
+            else {
+                console.log(`No message button :(`);
             }
         }
-        return "-";
-    }
+        clickMessageButton(firstName);
 
-    let fullName = document.querySelector(".text-heading-xlarge.inline.t-24.v-align-middle.break-words").innerText;
-    let currStatus = getCurrentStatus(fullName);
-    
-    // Create array of data to then insert
-    const data = [[
-        fullName,
-        currStatus,
-    ]];
-    console.log("data: ", data);
-    
-    // Validate data before returning
-    for (let i = 0; i < data[0].length; i++) {
-        if (data[0][i] === undefined || data[0][i] === null || (typeof data[0][i] === 'object' && Object.keys(data[0][i]).length === 0)) {
-            data[0][i] = '-';
-        }
-    }
-    console.log("cleaned data: ", data);
-    
-    return data;
+        setTimeout(() => {
+            // Function to check if In-Mail message or normal message
+            function checkMessageType() {
+                const inMailSelector = document.querySelector(`div[data-view-name="message-overlay-conversation-bubble-item"]`);
+                const inMailSubjectInput = document.querySelector(`input[name="subject"]`);
+
+                console.log("inMailSelector: ", inMailSelector);
+                console.log("inMailSubjectInput: ", inMailSubjectInput);
+
+                if (inMailSelector && inMailSubjectInput) {
+                    console.log(`In-Mail message detected: ${inMailSelector || inMailSubjectInput}`);
+                    return "In-Mail";
+                } else {
+                    console.log(`Regular message detected`);
+                    return "Regular";
+                }
+            }
+            let messageType = checkMessageType();
+
+            // Function to check the current connection status
+            function getCurrentStatus(fullName) {
+                const selectors = {
+                    yetToConnect: [
+                        `.ph5.pb5 button[aria-label*='Invite']`,
+                        `.ph5.pb5 button[aria-label*='Invite ${fullName} to connect'] button`,
+                        `.ph5.pb5 div[aria-label*='Invite ${fullName} to connect']`,
+                        `.ph5 button[aria-label*='Invite']`,
+                        `.ph5 button[aria-label*='Invite ${fullName} to connect'] button`,
+                        `.ph5 div[aria-label*='Invite ${fullName} to connect']`,
+                    ],
+                    pendingConnection: [
+                        `.ph5.pb5 button[aria-label*='Pending']`,
+                        `.ph5.pb5 button[aria-label*='Pending, click to withdraw invitation sent to ${fullName}'] button`,
+                        `.ph5.pb5 div[aria-label*='Pending, click to withdraw invitation sent to ${fullName}']`,
+                        `.ph5 button[aria-label*='Pending']`,
+                        `.ph5 button[aria-label*='Pending, click to withdraw invitation sent to ${fullName}'] button`,
+                        `.ph5 div[aria-label*='Pending, click to withdraw invitation sent to ${fullName}']`,
+                    ],
+                    completedConnection: [
+                        `.ph5.pb5 button[aria-label*='Remove']`,
+                        `.ph5.pb5 button[aria-label*='Remove your connection to ${fullName}'] button`,
+                        `.ph5.pb5 div[aria-label*='Remove your connection to ${fullName}']`,
+                        `.ph5 button[aria-label*='Remove']`,
+                        `.ph5 button[aria-label*='Remove your connection to ${fullName}'] button`,
+                        `.ph5 div[aria-label*='Remove your connection to ${fullName}']`,
+                    ]
+                };
+
+                if(messageType === "Regular") {
+                    const messageElements = document.querySelectorAll('li.msg-s-message-list__event');
+                    const numberOfMessages = messageElements.length;
+                    console.log(`Number of messages: ${numberOfMessages}`);
+
+                    const lastMessageElement = messageElements[numberOfMessages - 1];
+                    const senderElement = lastMessageElement.querySelector('.msg-s-message-group__name');
+                    if (senderElement) {
+                        let lastMessageSender = senderElement.innerText.trim();
+                        console.log(`lastMessageSender: ${lastMessageSender}`);
+                        
+                        if (numberOfMessages === 1) {
+                            if (lastMessageSender.includes("Nikhil Suresh Nair")) {
+                                return "NEED TO THANK THEM FOR ACCEPTING";
+                            }
+                        } 
+                        else {
+                            const secondLastMessageElement = messageElements[numberOfMessages - 2];
+                            const secondLastSenderElement = secondLastMessageElement.querySelector('.msg-s-message-group__name');
+                            
+                            if (secondLastSenderElement) {
+                                const secondLastMessageSender = secondLastSenderElement.innerText.trim();
+                                console.log(`secondLastMessageSender: ${secondLastMessageSender}`);
+                                
+                                if (secondLastMessageSender.includes("Nikhil Suresh Nair") && !lastMessageSender.includes("Nikhil Suresh Nair")) {
+                                    return "NEED TO REPLY BACK";
+                                }
+                                else if (lastMessageSender.includes("Nikhil Suresh Nair")) {
+                                    return "WAITING FOR REPLY LINKEDIN";
+                                }
+                            }
+                        }
+                    }
+
+                    return "NEED TO THANK THEM FOR ACCEPTING"
+                }
+                else if(messageType === "In-Mail") {
+                    for (const [status, elements] of Object.entries(selectors)) {
+                        if (elements.some(selector => document.querySelector(selector))) {
+                            if (status === "yetToConnect") {
+                                return "YET TO SEND CONNECTION REQUEST"
+                            }
+                            else if (status === "pendingConnection") {
+                                return "PENDING"
+                            }
+                        }
+                    }
+                }
+                
+                return "-";
+            }
+            const currStatus = getCurrentStatus(fullName);
+
+            // Create array of data to then insert
+            const data = [[
+                fullName,
+                currStatus,
+            ]];
+            console.log("data: ", data);
+            
+            // Validate data before returning
+            for (let i = 0; i < data[0].length; i++) {
+                if (data[0][i] === undefined || data[0][i] === null || (typeof data[0][i] === 'object' && Object.keys(data[0][i]).length === 0)) {
+                    data[0][i] = '-';
+                }
+            }
+            console.log("cleaned data: ", data);
+            resolve(data);
+        }, 1000);
+    });
 }
 
 // Function to run on message action
@@ -343,12 +423,12 @@ function dataToSheet(sentConnReq) {
         }
     });
 }
-function updatedStatusInSheet() {
+async function updatedStatusInSheet() {
     console.log("updatedStatusInSheet");
     
-    chrome.storage.local.get(['saved_spreadsheetId', 'saved_sheetName'], (result) => {
+    chrome.storage.local.get(['saved_spreadsheetId', 'saved_sheetName'], async (result) => {
         const { saved_spreadsheetId: spreadsheetId, saved_sheetName: sheetName } = result;
-        const data = status_ProfileData();
+        const data = await status_ProfileData();
         console.log(`data: ${data}`);
         const profileName = data[0][0];
         console.log(`profileName: ${profileName}`);
