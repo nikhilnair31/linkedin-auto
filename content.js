@@ -9,7 +9,7 @@ function onPageLoad() {
     });
 }
 function runAfterDelay() {
-    setTimeout(onPageLoad, 2000);
+    setTimeout(onPageLoad, 500);
 }
 runAfterDelay();
 
@@ -423,12 +423,45 @@ function dataToSheet(sentConnReq) {
         }
     });
 }
-async function updatedStatusInSheet() {
+async function updatedStatusInSheetOld() {
     console.log("updatedStatusInSheet");
     
     chrome.storage.local.get(['saved_spreadsheetId', 'saved_sheetName'], async (result) => {
         const { saved_spreadsheetId: spreadsheetId, saved_sheetName: sheetName } = result;
         const data = await status_ProfileData();
+        console.log(`data: ${data}`);
+        const profileName = data[0][0];
+        console.log(`profileName: ${profileName}`);
+        const status = data[0][1];
+        console.log(`status: ${status}`);
+
+        chrome.runtime.sendMessage(
+            {
+                action: 'updateStatus',
+                spreadsheetId,
+                sheetName,
+                profileName,
+                status
+            },
+            (response) => {
+                console.log("Response:", response);
+            }
+        );
+    });
+    
+    chrome.storage.local.get(['saved_autoCloseTabs'], (result) => {
+        if (result.saved_autoCloseTabs) {
+            console.log("Closing tab!");
+            setTimeout(() => chrome.runtime.sendMessage({ action: "closeTab" }), 1000);
+        }
+    });
+}
+function updatedStatusInSheet() {
+    console.log("updatedStatusInSheet");
+    
+    chrome.storage.local.get(['saved_spreadsheetId', 'saved_sheetName'], (result) => {
+        const { saved_spreadsheetId: spreadsheetId, saved_sheetName: sheetName } = result;
+        const data = status_ProfileData();
         console.log(`data: ${data}`);
         const profileName = data[0][0];
         console.log(`profileName: ${profileName}`);

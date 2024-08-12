@@ -1,6 +1,6 @@
 // Global variables for column letters
-var APOLLO_API_KEY = '';
-var RESUME_URL = '';
+var APOLLO_API_KEY = '***REMOVED***';
+var RESUME_URL = '***REMOVED***';
 var UNIQUE_ID = "?id=statusCH3CK";
 var COLUMN_LETTERS = {
   FULLNAME_AND_HYPERLINK: "A",
@@ -47,6 +47,7 @@ function fetchApolloEmails() {
     var hyperlinkCell = range.offset(rowIndex, hyperlinkCol - range.getColumn(), 1, 1);
     var emailCell = range.offset(rowIndex, emailCol - range.getColumn(), 1, 1);
     var hyperlinkFormula = hyperlinkCell.getFormula();
+    var hyperlinkValue = hyperlinkCell.getValue();
 
     Logger.log('Hyperlink formula in row ' + (range.getRow() + rowIndex) + ': ' + hyperlinkFormula);
 
@@ -65,9 +66,27 @@ function fetchApolloEmails() {
           Logger.log('Error fetching email' + errorMessage);
         }
       });
-    } else {
-      emailCell.setValue("Invalid HYPERLINK formula");
-      Logger.log('Invalid HYPERLINK formula in row: ' + (range.getRow() + rowIndex));
+    }
+    else if (hyperlinkValue.match(/https?:\/\/[^\s]+/)) {
+      // Check if there is a raw URL in the cell
+      var rawUrl = hyperlinkValue.match(/https?:\/\/[^\s]+/)[0];
+      Logger.log('Extracted raw URL: ' + rawUrl);
+
+      emailCell.setValue("Fetching...");
+
+      fetchEmail(rawUrl, function(email, errorMessage) {
+        if (email) {
+          emailCell.setValue(email);
+          Logger.log('Email fetched: ' + email);
+        } else {
+          emailCell.setValue(errorMessage);
+          Logger.log('Error fetching email: ' + errorMessage);
+        }
+      });
+    } 
+    else {
+      emailCell.setValue("No valid hyperlink or URL");
+      Logger.log('No valid hyperlink or URL in row: ' + (range.getRow() + rowIndex));
     }
   });
 }
@@ -169,7 +188,7 @@ function composeEmailDrafts() {
         }
 
         jobStr += jobName;
-        jobStrHtml += `<a href="${jobUrl}" target="_blank">${jobName}</a>`;
+        jobStrHtml += <a href="${jobUrl}" target="_blank">${jobName}</a>;
       });
       Logger.log('jobStr: ' + jobStr);
       Logger.log('jobStrHtml: ' + jobStrHtml);
@@ -190,12 +209,12 @@ function composeEmailDrafts() {
       });
     }
     else {
-      Logger.log(`No email drafted for ${fullName}`);
+      Logger.log(No email drafted for ${fullName});
     }
   });
 }
 function sendEmail(toEmailAddress, firstName, jobStr, jobStrHtml, isPlural, companyName, resumeBlob, callback) {
-  var subject = `Application for ${jobStr} ${isPlural ? 'Roles' : 'Role'} at ${companyName}`;
+  var subject = Application for ${jobStr} ${isPlural ? 'Roles' : 'Role'} at ${companyName};
   Logger.log('subject: ' + subject);
 
   var body = `
