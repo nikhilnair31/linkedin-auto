@@ -2,6 +2,7 @@
     "manifest_version": 3,
     "name": "LinkedIn Automation",
     "version": "1.0",
+    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxiWKEJgLCj2dxegkGRoDmtT1TCv2eTsguD9Niw3sBlRTkeC/2Yt9FHvhO4PCofT1MBQkp9+oVXjGnJ4drnxVhWR/UdAyH1Ojr4eH6dBkTVCToQ1DjdM8MgFe9ieEXmoBrd9fZ5E7Mfraw3VSAwJSaJ+0xbRVD7GNArkkWaoDJdrErE8PtmjOM9zu+E1SCqN4DRA18EmR4qLgp9Ytjo9kJhY5VJw8BNmIj9DHSqLMLGyO9sCgK7g3x1K+9FOoAcWfKCbCW4KBF1ozkXxxtkhosiVrNcXw6N9L9Q4KZozNWSAFITyEutm1aogISXejoUazyydVl1St3ouPyJatS1bhTQIDAQAB",
     "description": "Automate LinkedIn connection requests and save profile details.",
     "permissions": [
         "identity",

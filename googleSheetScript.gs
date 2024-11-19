@@ -1,7 +1,6 @@
 // Global variables for column letters
-var APOLLO_API_KEY = '***REMOVED***';
-var RESUME_URL = '***REMOVED***';
-var UNIQUE_ID = "?id=statusCH3CK";
+var APOLLO_API_KEY = '<API-KEY>';
+var RESUME_URL = <RESUME_URL_FIREBASE>;
 var COLUMN_LETTERS = {
   FULLNAME_AND_HYPERLINK: "A",
   SENT_INVITE_FLAG: "B",
@@ -277,45 +276,5 @@ function sendEmail(toEmailAddress, firstName, jobStr, jobStrHtml, isPlural, comp
   } catch (e) {
     Logger.log('Error during GMail Draft creation: ' + e.toString());
     callback("N");
-  }
-}
-
-function updateStatus() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var range = sheet.getActiveRange();
-  var values = range.getValues();
-  
-  // Define the columns
-  var hyperlinkCol = getColumnNumber(COLUMN_LETTERS.FULLNAME_AND_HYPERLINK);
-
-  var urlList = [];
-  values.forEach(function(row, rowIndex) {
-    var hyperlinkCell = range.offset(rowIndex, hyperlinkCol - range.getColumn(), 1, 1);
-    var hyperlinkFormula = hyperlinkCell.getFormula();
-    
-    if (hyperlinkFormula.startsWith('=HYPERLINK')) {
-      var link = hyperlinkFormula.match(/HYPERLINK\("(.*?)",/)[1];
-      Logger.log('Extracted link: ' + link);
-      
-      var uniqueURL = link + UNIQUE_ID;
-      urlList.push(uniqueURL);
-    } 
-    else {
-      Logger.log('Invalid HYPERLINK formula in row: ' + (range.getRow() + rowIndex));
-    }
-  });
-  Logger.log('URL list to open: ' + urlList);
-
-  for (var i = 0; i < urlList.length; i++) {
-    Logger.log('Opening URL: ' + urlList[i]);
-
-    var html = '<script>window.open("' + urlList[i] + '", "_blank");google.script.host.close();</script>';
-    var userInterface = HtmlService.createHtmlOutput(html);
-
-    SpreadsheetApp.getUi().showModalDialog(userInterface, 'Opening URL...');
-    Logger.log('Opened URL in modal dialog: ' + urlList[i]);
-
-    // Sleep for a short period to allow the modal to open the URL
-    Utilities.sleep(2000); // Adjust the delay as needed
   }
 }

@@ -85,7 +85,7 @@ function fullPull_ProfileData() {
     let firstName = getFirstWord(fullName);
     
     // Check for the company element
-    let companyElement = document.querySelector(".pv-text-details__right-panel button[aria-label*='Current company']");
+    let companyElement = document.querySelector("button[aria-label*='Current company']");
     let company = companyElement ? companyElement.innerText.trim() : "-";
     console.log(`company: ${company}`);
     
